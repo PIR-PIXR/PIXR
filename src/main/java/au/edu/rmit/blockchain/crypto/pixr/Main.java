@@ -1,49 +1,56 @@
 package au.edu.rmit.blockchain.crypto.pixr;
 
-import au.edu.rmit.blockchain.crypto.pixr.api.BlockChainApi;
+import au.edu.rmit.blockchain.crypto.pixr.algorithms.PIXRBloomFilter;
+import au.edu.rmit.blockchain.crypto.pixr.algorithms.PIXRDistinctVectorFinder;
+import au.edu.rmit.blockchain.crypto.pixr.algorithms.SmartScanStrategy;
 import au.edu.rmit.blockchain.crypto.pixr.data.BlockDataAccess;
 import au.edu.rmit.blockchain.crypto.pixr.dto.Block;
-import au.edu.rmit.blockchain.crypto.pixr.dto.BlockAtHeight;
-import au.edu.rmit.blockchain.crypto.pixr.dto.Input;
 import au.edu.rmit.blockchain.crypto.pixr.dto.Transaction;
-import au.edu.rmit.blockchain.crypto.pixr.utils.http.APIException;
-import com.google.common.hash.BloomFilter;
-import com.google.common.hash.Funnel;
-import com.google.common.hash.Funnels;
-import com.google.common.primitives.Ints;
-import com.google.gson.GsonBuilder;
+import au.edu.rmit.blockchain.crypto.pixr.utils.Setting;
+import au.edu.rmit.blockchain.crypto.pixr.utils.Util;
+import au.edu.rmit.blockchain.crypto.pixr.utils.measurement.Dynamometer;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
-import static au.edu.rmit.blockchain.crypto.pixr.utils.Util.parseHex2Binary;
-import static javax.xml.crypto.dsig.DigestMethod.SHA256;
-
-@SuppressWarnings("UnstableApiUsage")
 public class Main {
-    public static void main(String[] args) throws APIException, IOException, NoSuchAlgorithmException, InterruptedException {
-//        Funnel<byte[]> funnel = Funnels.byteArrayFunnel();
-//        BloomFilter<byte[]> bf = BloomFilter.create(funnel, 100);
-//        for (int i = 0; i < 100; i++) {
-//            bf.put(Ints.toByteArray(i));
-//        }
-//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//        bf.writeTo(baos);
-//        byte[] bytes = baos.toByteArray();
-//        for (byte b : bytes) {
-//            System.out.print(Integer.toBinaryString(b & 0xFF));
-//        }
+    public static void main(String[] args) throws Exception {
 
         BlockDataAccess dataAccess = new BlockDataAccess();
-        dataAccess.download();
+        var blocks = dataAccess.load();
+        if (blocks.isEmpty()) {
+            dataAccess.downloadBlock();
+            blocks = dataAccess.load();
+        }
+        for (Block b : blocks) {
+            System.out.println("Block:" + b.getHash());
+            System.out.println("Number of transaction:" + b.getTransactions().size());
+            System.out.println("Distinct Vector Finder:");
+            Dynamometer.measure(() -> {
+                PIXRDistinctVectorFinder finder = new PIXRDistinctVectorFinder(new SmartScanStrategy(), Setting.HASH_CODE_LENGTH);
+                List<Transaction> txs = b.getTransactions();
+                for (Transaction tx : txs) {
+                    finder.put(Util.parseHex2Binary(tx.getHash()));
+                }
+                var result = finder.find();
+                System.out.println("\tVector length:" + result.getLength());
+                System.out.println("\tStart position:" + result.getPosition());
+                System.out.println("\tSize:" + result.measureResultSize() + " bits");
+                return true;
+            });
+
+            System.out.println("Bloom Filter:");
+            Dynamometer.measure(() -> {
+                List<Transaction> txs = b.getTransactions();
+                PIXRBloomFilter bloomFilter = new PIXRBloomFilter(txs.size(), 0.01);
+                for (int i = 0; i < txs.size(); i++) {
+                    bloomFilter.put(txs.get(i), i);
+                }
+                var result = bloomFilter.getResult();
+                System.out.println("\tFalse positive rate:" + result.getFpRate());
+                System.out.println("\tSize:" + result.measureResultSize() + " bits");
+                return true;
+            });
+            System.out.println("-----------------------------------------------");
+        }
     }
 }

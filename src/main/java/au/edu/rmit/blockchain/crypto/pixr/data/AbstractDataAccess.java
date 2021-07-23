@@ -1,29 +1,52 @@
 package au.edu.rmit.blockchain.crypto.pixr.data;
 
 import au.edu.rmit.blockchain.crypto.pixr.utils.JsonFileManager;
+import au.edu.rmit.blockchain.crypto.pixr.utils.Setting;
 import au.edu.rmit.blockchain.crypto.pixr.utils.http.APIException;
 import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.units.qual.A;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class AbstractDataAccess<T> implements DataAccess<T> {
 
-
+    /**
+     * Get file to write or read data
+     *
+     * @return file name
+     */
     abstract String getFileName();
 
-    abstract String getDataFromApi() throws APIException, IOException, InterruptedException;
+    /**
+     * Fetch data from blockchain API
+     *
+     * @return data as json string
+     */
+    abstract String getDataFromApi() throws APIException, IOException;
 
-    abstract T parseData(String s);
+    /**
+     * Parse json to corresponding object
+     *
+     * @param json json string
+     * @return Target object e.g. Block or Transaction
+     */
+    abstract T parseData(String json);
 
+    /**
+     * Check whether the source file exist. If it is not , create a new one
+     *
+     * @param fileName source file name
+     * @return path to the file
+     */
     private String checkAndCreateResourceIfNotExist(String fileName) throws IOException {
-        String filePath = "/Users/duyhuynh/data/" + fileName;
+        String dataPath = Setting.DATA_HOME;
+        String filePath = dataPath + fileName;
+        File dataHome = new File(dataPath);
+        if (!dataHome.exists()) {
+            dataHome.mkdir();
+        }
         File file = new File(filePath);
         if (!file.exists()) {
             file.createNewFile();
@@ -32,25 +55,24 @@ public abstract class AbstractDataAccess<T> implements DataAccess<T> {
     }
 
     @Override
-    public void download() throws IOException, APIException, InterruptedException {
+    public void download() throws IOException, APIException {
         String fileName = getFileName();
         String filePath = checkAndCreateResourceIfNotExist(fileName);
         JsonFileManager manager = new JsonFileManager(filePath);
-        for (int i = 0; i < 5; i++) {
-            String jsonData = getDataFromApi();
-            manager.write(jsonData);
-        }
+        String jsonData = getDataFromApi();
+        manager.write(jsonData);
     }
 
 
     @Override
     public ImmutableList<T> load() throws IOException {
         String fileName = getFileName();
-        URL url = this.getClass().getClassLoader().getResource(fileName);
-        if (url == null) {
+        String filePath = Setting.DATA_HOME + fileName;
+        File file = new File(filePath);
+        if (!file.exists()) {
             return ImmutableList.of();
         }
-        JsonFileManager manager = new JsonFileManager(url.getPath());
+        JsonFileManager manager = new JsonFileManager(filePath);
         ImmutableList<String> jsonData = manager.read();
         List<T> result = new ArrayList<>();
         for (String s : jsonData) {

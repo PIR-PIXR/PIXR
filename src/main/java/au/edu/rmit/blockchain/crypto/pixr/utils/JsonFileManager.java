@@ -1,7 +1,6 @@
 package au.edu.rmit.blockchain.crypto.pixr.utils;
 
 import com.google.common.collect.ImmutableList;
-import com.google.gson.JsonObject;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -17,6 +16,11 @@ public class JsonFileManager {
         this.path = path;
     }
 
+    /**
+     * Write data to file (append mode)
+     *
+     * @param data json data
+     */
     public void write(String data) throws IOException {
         FileWriter writer = new FileWriter(path, true);
         writer.write(data + System.lineSeparator());
@@ -24,6 +28,11 @@ public class JsonFileManager {
         writer.close();
     }
 
+    /**
+     * Read data from source file
+     *
+     * @return List of json
+     */
     public ImmutableList<String> read() throws IOException {
         String line;
         List<String> items = new ArrayList<>();

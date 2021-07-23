@@ -1,38 +1,37 @@
 package au.edu.rmit.blockchain.crypto.pixr.data;
 
-import au.edu.rmit.blockchain.crypto.pixr.api.BlockChainApi;
 import au.edu.rmit.blockchain.crypto.pixr.api.BlockQuery;
 import au.edu.rmit.blockchain.crypto.pixr.dto.Block;
 import au.edu.rmit.blockchain.crypto.pixr.utils.http.APIException;
 import com.google.gson.GsonBuilder;
-import org.checkerframework.checker.units.qual.A;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+
+import static au.edu.rmit.blockchain.crypto.pixr.utils.Setting.*;
 
 public class BlockDataAccess extends AbstractDataAccess<Block> {
-    private final String startBlock = "00000000000000000002a23d6df20eecec15b21d32c75833cce28f113de888b7";
-    private String fileName = "block.json";
     private final GsonBuilder parser = new GsonBuilder();
+    private final BlockQuery query = new BlockQuery(START_BLOCK);
+
+    public void downloadBlock() throws APIException, IOException {
+        for (int i = 1; i <= NUM_BLOCK_TO_DOWNLOAD; i++) {
+            download();
+        }
+    }
 
     @Override
-    String getDataFromApi() throws APIException, IOException, InterruptedException {
-        BlockQuery query = new BlockQuery(startBlock);
+    String getDataFromApi() throws APIException, IOException {
         return query.nextBlockWithCondition().toJson();
     }
 
     @Override
-    Block parseData(String s) {
-        return parser.create().fromJson(s, Block.class);
+    Block parseData(String json) {
+        return parser.create().fromJson(json, Block.class);
     }
 
     @Override
     public String getFileName() {
-        return fileName;
+        return BLOCK_FILE;
     }
 
-    public void setFileName(String FILENAME) {
-        this.fileName = FILENAME;
-    }
 }

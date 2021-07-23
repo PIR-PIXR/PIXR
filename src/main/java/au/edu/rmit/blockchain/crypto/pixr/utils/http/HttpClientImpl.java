@@ -1,10 +1,10 @@
 package au.edu.rmit.blockchain.crypto.pixr.utils.http;
 
 import au.edu.rmit.blockchain.crypto.pixr.utils.Util;
-import lombok.Builder;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -22,6 +22,15 @@ public class HttpClientImpl implements HttpClient {
         this.TIMEOUT_MS = TIMEOUT_MS;
     }
 
+    /**
+     * Common API call method
+     *
+     * @param baseURL       Home page url
+     * @param resource      API url
+     * @param params        paramaters
+     * @param requestMethod POST| GET
+     * @return json data
+     */
     private String call(String baseURL, String resource, Map<String, String> params, String requestMethod) throws APIException, IOException {
         String encodedParams = Util.urlEncodeParams(params);
         URL url;

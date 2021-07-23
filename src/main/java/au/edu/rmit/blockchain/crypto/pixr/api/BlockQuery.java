@@ -1,9 +1,11 @@
 package au.edu.rmit.blockchain.crypto.pixr.api;
 
 import au.edu.rmit.blockchain.crypto.pixr.dto.Block;
+import au.edu.rmit.blockchain.crypto.pixr.utils.Setting;
 import au.edu.rmit.blockchain.crypto.pixr.utils.http.APIException;
 
 import java.io.IOException;
+import java.io.Serial;
 
 public class BlockQuery {
     private final String startHashCode;
@@ -34,33 +36,27 @@ public class BlockQuery {
      *
      * @return next block
      */
-    public Block nextBlockWithCondition() throws APIException, IOException, InterruptedException {
-        Block block = api.getBlock(currentHashCode);
-        String nextBlockHash = null;
-        while (!block.getNextBlockHashes().isEmpty() && !checkCondition(block.getSize())) {
-            nextBlockHash = block.getNextBlockHashes().get(0);
-            if (nextBlockHash.equals(currentHashCode))
-                return null;
+    public Block nextBlockWithCondition() throws APIException, IOException {
+        Block block;
+        String nextBlockHash = currentHashCode;
+        do {
             block = api.getBlock(nextBlockHash);
-            System.out.println(block.getSize());
-            Thread.sleep(5000);
-        }
-        if (nextBlockHash != null)
+            nextBlockHash = block.getNextBlockHashes().get(0);
+        } while (!block.getNextBlockHashes().isEmpty() && !checkCondition(block.getTransactions().size()));
+        if (!nextBlockHash.equals(currentHashCode))
             currentHashCode = nextBlockHash;
         return block;
     }
 
 
     /**
-     * check if size satisfy the condition that 2^10 <= size and in the form of 2^n
+     * Check if size satisfy the condition that 2^10 <= size
      *
      * @param size number of tx
      * @return true|false
      */
     private boolean checkCondition(long size) {
-        double logBase2 = Math.log(size) / Math.log(2);
-        int floorValue = (int) logBase2;
-        return logBase2 >= 10 && logBase2 == floorValue;
+        return size >= Setting.LOWER_BOUND_OF_NUM_TRANSACTION;
     }
 
     /**

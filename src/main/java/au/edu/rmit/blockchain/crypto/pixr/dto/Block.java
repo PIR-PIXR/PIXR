@@ -6,6 +6,11 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 public class Block {
+    private final long height;
+    private final String hash;
+    private final long time;
+    @SerializedName("main_chain")
+    private final boolean mainChain;
     @SerializedName("ver")
     private final int version;
     @SerializedName("prev_block")
@@ -26,7 +31,11 @@ public class Block {
     @SerializedName("tx")
     private final List<Transaction> transactions;
 
-    public Block(int version, String previousBlockHash, List<String> nextBlockHashes, String merkleRoot, long bits, long fee, long nonce, long size, long index, long receivedTime, String relayedBy, List<Transaction> transactions) {
+    public Block(long height, String hash, long time, boolean mainChain, int version, String previousBlockHash, List<String> nextBlockHashes, String merkleRoot, long bits, long fee, long nonce, long size, long index, long receivedTime, String relayedBy, List<Transaction> transactions) {
+        this.height = height;
+        this.hash = hash;
+        this.time = time;
+        this.mainChain = mainChain;
         this.version = version;
         this.previousBlockHash = previousBlockHash;
         this.nextBlockHashes = nextBlockHashes;
@@ -40,7 +49,6 @@ public class Block {
         this.relayedBy = relayedBy;
         this.transactions = transactions;
     }
-
 
     public int getVersion() {
         return version;
@@ -88,6 +96,22 @@ public class Block {
 
     public List<String> getNextBlockHashes() {
         return nextBlockHashes;
+    }
+
+    public long getHeight() {
+        return height;
+    }
+
+    public String getHash() {
+        return hash;
+    }
+
+    public long getTime() {
+        return time;
+    }
+
+    public boolean isMainChain() {
+        return mainChain;
     }
 
     public String toJson() {
