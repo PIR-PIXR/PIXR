@@ -1,7 +1,7 @@
 package au.edu.rmit.blockchain.crypto.pixr.algorithms;
 
 import au.edu.rmit.blockchain.crypto.pixr.algorithms.results.PIXRBloomFilterResult;
-import au.edu.rmit.blockchain.crypto.pixr.dto.Transaction;
+import au.edu.rmit.blockchain.crypto.common.dto.Transaction;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 
