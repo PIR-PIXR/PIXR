@@ -33,7 +33,7 @@ public class PIXRBloomFilter {
      * @param index index of tx in database
      * @return true|false
      */
-    public boolean checkMemberShip(Transaction tx, int index) {
+    public boolean checkMemberShip(Transaction tx, long index) {
         return checkMemberShip(tx.getHash(), index);
     }
 
@@ -44,7 +44,7 @@ public class PIXRBloomFilter {
      * @param index index of tx in database
      * @return true|false
      */
-    public boolean checkMemberShip(String hash, int index) {
+    public boolean checkMemberShip(String hash, long index) {
         StringBuilder builder = new StringBuilder(hash);
         return bloomFilter.mightContain(builder.append(index).toString());
     }
@@ -55,7 +55,7 @@ public class PIXRBloomFilter {
      * @param tx    transaction
      * @param index index of transaction in database
      */
-    public void put(Transaction tx, int index) {
+    public void put(Transaction tx, long index) {
         put(tx.getHash(), index);
     }
 
@@ -66,7 +66,7 @@ public class PIXRBloomFilter {
      * @param hash  transaction hashcode
      * @param index index of transaction in database
      */
-    public void put(String hash, int index) {
+    public void put(String hash, long index) {
         StringBuilder builder = new StringBuilder(hash);
         bloomFilter.put(builder.append(index).toString());
     }
