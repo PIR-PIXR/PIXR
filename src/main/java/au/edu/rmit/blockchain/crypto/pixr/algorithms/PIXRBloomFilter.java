@@ -14,7 +14,7 @@ import java.nio.charset.Charset;
 public class PIXRBloomFilter {
     private final long txSize;
     private final double fpRate;
-    private BloomFilter<String> bloomFilter;
+    private final BloomFilter<String> bloomFilter;
 
     public PIXRBloomFilter(long txSize) {
         this(txSize, 0.03);
@@ -24,6 +24,12 @@ public class PIXRBloomFilter {
         this.txSize = txSize;
         this.fpRate = fpRate;
         bloomFilter = BloomFilter.create(Funnels.stringFunnel(Charset.defaultCharset()), txSize, fpRate);
+    }
+
+    public PIXRBloomFilter(BloomFilter<String> bloomFilter) {
+        this.txSize = -1; // no track
+        this.fpRate = -1; // no track
+        this.bloomFilter = bloomFilter;
     }
 
     /**
@@ -76,9 +82,9 @@ public class PIXRBloomFilter {
      *
      * @param bytes binary array
      */
-    public void readFromBinary(byte[] bytes) throws IOException {
+    public static PIXRBloomFilter readFromBinary(byte[] bytes) throws IOException {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
-        bloomFilter = BloomFilter.readFrom(inputStream, Funnels.stringFunnel(Charset.defaultCharset()));
+        return new PIXRBloomFilter(BloomFilter.readFrom(inputStream, Funnels.stringFunnel(Charset.defaultCharset())));
     }
 
     /**

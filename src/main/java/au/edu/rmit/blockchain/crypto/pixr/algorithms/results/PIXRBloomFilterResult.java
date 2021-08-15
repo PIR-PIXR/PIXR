@@ -1,14 +1,17 @@
 package au.edu.rmit.blockchain.crypto.pixr.algorithms.results;
 
+import au.edu.rmit.blockchain.crypto.common.utils.Util;
 import com.google.gson.GsonBuilder;
-
-import java.util.Arrays;
 
 public class PIXRBloomFilterResult implements AlgorithmResult {
     private final long txSize;
     private final double fpRate;
     private final byte[] filter;
     private final String filterInBinString;
+    private long encodeTime;
+    private long decodeTime;
+    private int foundPositions;
+    private boolean isCorrect;
 
     public PIXRBloomFilterResult(long txSize, double fpRate, byte[] filter, String filterInBinString) {
         this.txSize = txSize;
@@ -40,6 +43,39 @@ public class PIXRBloomFilterResult implements AlgorithmResult {
 
     @Override
     public long measureResultSize() {
-        return filterInBinString.length();
+        long txSizeRequiredBit = Util.log2(txSize);
+        return filterInBinString.length() + txSizeRequiredBit;
+    }
+
+    public long getEncodeTime() {
+        return encodeTime;
+    }
+
+    public void setEncodeTime(long encodeTime) {
+        this.encodeTime = encodeTime;
+    }
+
+    public long getDecodeTime() {
+        return decodeTime;
+    }
+
+    public void setDecodeTime(long decodeTime) {
+        this.decodeTime = decodeTime;
+    }
+
+    public int getFoundPositions() {
+        return foundPositions;
+    }
+
+    public void setFoundPositions(int foundPositions) {
+        this.foundPositions = foundPositions;
+    }
+
+    public boolean isCorrect() {
+        return isCorrect;
+    }
+
+    public void setCorrect(boolean correct) {
+        isCorrect = correct;
     }
 }
