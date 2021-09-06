@@ -6,6 +6,7 @@ public class Setting {
     public static final String BLOCK_FILE = "block.json";
     public static final String BLOOM_FILTER = "BloomFilter.csv";
     public static final String DISTINCT_VECTOR_HASH = "DVHash.csv";
+    public static final String DISTINCT_VECTOR_HASH_2 = "DVHash2.csv";
     public static final String DISTINCT_VECTOR_ASTAR = "DVAStar.csv";
     public static final String TRANSACTION_FILE = "transaction.json";
     public static final String START_BLOCK = "00000000000000000002a23d6df20eecec15b21d32c75833cce28f113de888b7";
