@@ -2,6 +2,7 @@ package au.edu.rmit.blockchain.crypto.common.utils;
 
 import au.edu.rmit.blockchain.crypto.pixr.algorithms.NotMatchException;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
@@ -16,6 +17,8 @@ public class CsvFileManager {
     }
 
     public void write(List<String[]> data) throws IOException, NotMatchException {
+        File yourFile = new File(path);
+        yourFile.createNewFile();
         if (data == null || data.isEmpty() || data.get(0).length != headers.length) {
             throw new NotMatchException("Data size not match to headers");
         }

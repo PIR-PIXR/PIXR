@@ -3,6 +3,7 @@ package au.edu.rmit.blockchain.crypto.common.data;
 import au.edu.rmit.blockchain.crypto.common.utils.JsonFileManager;
 import au.edu.rmit.blockchain.crypto.common.utils.Setting;
 import au.edu.rmit.blockchain.crypto.common.utils.http.APIException;
+import au.edu.rmit.blockchain.crypto.pixr.algorithms.NotImpletementException;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
@@ -24,7 +25,14 @@ public abstract class AbstractDataAccess<T> implements DataAccess<T> {
      *
      * @return data as json string
      */
-    abstract String getDataFromApi() throws APIException, IOException;
+    abstract String getDataFromApi() throws APIException, IOException, NotImpletementException;
+
+    /**
+     * Get processed data from blockchain API and
+     *
+     * @return data as string
+     */
+    abstract List<String> getProcessesData() throws APIException, IOException, NotImpletementException;
 
     /**
      * Parse json to corresponding object
@@ -33,6 +41,9 @@ public abstract class AbstractDataAccess<T> implements DataAccess<T> {
      * @return Target object e.g. Block or Transaction
      */
     abstract T parseData(String json);
+
+
+    abstract boolean isMultipleWrite();
 
     /**
      * Check whether the source file exist. If it is not , create a new one
@@ -55,12 +66,18 @@ public abstract class AbstractDataAccess<T> implements DataAccess<T> {
     }
 
     @Override
-    public void download() throws IOException, APIException {
+    public void download() throws IOException, APIException, NotImpletementException {
         String fileName = getFileName();
         String filePath = checkAndCreateResourceIfNotExist(fileName);
         JsonFileManager manager = new JsonFileManager(filePath);
-        String jsonData = getDataFromApi();
-        manager.write(jsonData);
+        if (isMultipleWrite()) {
+            for (String data : getProcessesData()) {
+                manager.write(data);
+            }
+        } else {
+            String jsonData = getDataFromApi();
+            manager.write(jsonData);
+        }
     }
 
 
@@ -79,5 +96,17 @@ public abstract class AbstractDataAccess<T> implements DataAccess<T> {
             result.add(parseData(s));
         }
         return ImmutableList.copyOf(result);
+    }
+
+    @Override
+    public ImmutableList<ImmutableList<String>> loadBySet(int size, int number) throws IOException {
+        String fileName = getFileName();
+        String filePath = Setting.DATA_HOME + fileName;
+        File file = new File(filePath);
+        if (!file.exists()) {
+            return ImmutableList.of();
+        }
+        JsonFileManager manager = new JsonFileManager(filePath);
+        return manager.read(size, number);
     }
 }

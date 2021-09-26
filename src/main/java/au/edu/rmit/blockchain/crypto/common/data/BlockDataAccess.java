@@ -6,6 +6,7 @@ import au.edu.rmit.blockchain.crypto.common.dto.Transaction;
 import au.edu.rmit.blockchain.crypto.common.utils.JsonFileManager;
 import au.edu.rmit.blockchain.crypto.common.utils.Setting;
 import au.edu.rmit.blockchain.crypto.common.utils.http.APIException;
+import au.edu.rmit.blockchain.crypto.pixr.algorithms.NotImpletementException;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.GsonBuilder;
 
@@ -46,7 +47,7 @@ public class BlockDataAccess extends AbstractDataAccess<Block> {
         return ImmutableList.copyOf(result);
     }
 
-    public void downloadBlock() throws APIException, IOException {
+    public void downloadBlock() throws APIException, IOException, NotImpletementException {
         for (int i = 1; i <= NUM_BLOCK_TO_DOWNLOAD; i++) {
             download();
         }
@@ -58,8 +59,18 @@ public class BlockDataAccess extends AbstractDataAccess<Block> {
     }
 
     @Override
+    List<String> getProcessesData() throws NotImpletementException {
+        throw new NotImpletementException("Not implemented!");
+    }
+
+    @Override
     Block parseData(String json) {
         return parser.create().fromJson(json, Block.class);
+    }
+
+    @Override
+    boolean isMultipleWrite() {
+        return false;
     }
 
     @Override

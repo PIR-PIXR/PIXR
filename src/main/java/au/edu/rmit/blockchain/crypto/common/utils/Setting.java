@@ -4,7 +4,10 @@ public class Setting {
     public static final String DATA_HOME = "/Users/duyhuynh/data/";
     public static final String RESULT_HOME = "/Users/duyhuynh/data/result/";
     public static final String BLOCK_FILE = "block.json";
+    public static final String PXIR_FILE = "hashcode.json";
     public static final String BLOOM_FILTER = "BloomFilter.csv";
+    public static final String BLOOM_FILTER_PREFIX = "BloomFilter";
+    public static final String CSV_EXTENSION = ".csv";
     public static final String DISTINCT_VECTOR_HASH = "DVHash.csv";
     public static final String DISTINCT_VECTOR_HASH_2 = "DVHash2.csv";
     public static final String DISTINCT_VECTOR_ASTAR = "DVAStar.csv";
