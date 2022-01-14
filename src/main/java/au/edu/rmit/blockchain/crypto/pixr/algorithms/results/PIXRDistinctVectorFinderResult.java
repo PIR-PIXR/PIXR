@@ -1,23 +1,25 @@
 package au.edu.rmit.blockchain.crypto.pixr.algorithms.results;
 
+import au.edu.rmit.blockchain.crypto.common.utils.Util;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.GsonBuilder;
+
+import java.util.List;
 
 public class PIXRDistinctVectorFinderResult implements AlgorithmResult {
     private final long txSize;
     private final int hashLength;
-    private final int length;
-    private final int position;
-    private final int step;
-    private final ImmutableList<String> distinctList;
+    private final List<Integer> positions;
+    private final ImmutableList<String> vectors;
+    private long encodeTime;
+    private long decodeTime;
+    private int initialStep;
 
-    public PIXRDistinctVectorFinderResult(long txSize, int hashLength, int length, int position, int step, ImmutableList<String> hashList) {
+    public PIXRDistinctVectorFinderResult(long txSize, int hashLength, List<Integer> positions, ImmutableList<String> vectors) {
         this.txSize = txSize;
         this.hashLength = hashLength;
-        this.length = length;
-        this.position = position;
-        this.step = step;
-        this.distinctList = hashList;
+        this.positions = positions;
+        this.vectors = vectors;
     }
 
     @Override
@@ -25,16 +27,14 @@ public class PIXRDistinctVectorFinderResult implements AlgorithmResult {
         return new GsonBuilder().create().toJson(this);
     }
 
-    public int getLength() {
-        return length;
+    @Override
+    public long measureResultSize() {
+        // number of position * positionCost + (bit_per_vector * number of transaction)
+        return (positions.size() * Util.log2(hashLength)) + (vectors.get(0).length() * txSize);
     }
 
-    public int getPosition() {
-        return position;
-    }
-
-    public ImmutableList<String> getDistinctList() {
-        return distinctList;
+    public ImmutableList<String> getVectors() {
+        return vectors;
     }
 
     public long getTxSize() {
@@ -45,15 +45,32 @@ public class PIXRDistinctVectorFinderResult implements AlgorithmResult {
         return hashLength;
     }
 
-    public int getStep() {
-        return step;
+    public List<Integer> getPositions() {
+        return positions;
     }
 
-    @Override
-    public long measureResultSize() {
-        // number of bits required to represent hash length
-        long representedBits = (long) (Math.log(hashLength) / Math.log(2));
-        // lengthCost + positionCost + (bit_per_vector * number of transaction)
-        return (representedBits * 2) + (length * txSize);
+    public long getEncodeTime() {
+        return encodeTime;
     }
+
+    public void setEncodeTime(long encodeTime) {
+        this.encodeTime = encodeTime;
+    }
+
+    public long getDecodeTime() {
+        return decodeTime;
+    }
+
+    public void setDecodeTime(long decodeTime) {
+        this.decodeTime = decodeTime;
+    }
+
+    public int getInitialStep() {
+        return initialStep;
+    }
+
+    public void setInitialStep(int initialStep) {
+        this.initialStep = initialStep;
+    }
+
 }

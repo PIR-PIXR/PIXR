@@ -34,7 +34,14 @@ public class Util {
         return binaryString.toString();
     }
 
-    //
+    /**
+     * Print out heap space
+     */
+    public static void printHeap() {
+        System.out.println("\t heapSize:" + Runtime.getRuntime().totalMemory());
+        System.out.println("\t heapMaxSize:" + Runtime.getRuntime().maxMemory());
+        System.out.println("\t heapFreeSize:" + Runtime.getRuntime().freeMemory());
+    }
 
     /**
      * Function to extract k bits from p position and returns the extracted value as integer
@@ -102,8 +109,19 @@ public class Util {
      * @return log2(n)
      */
 
-    public static int log2(int n) {
-        return (int) (Math.log(n) / Math.log(2));
+    public static long log2(long n) {
+        return (long) (Math.log(n) / Math.log(2));
+    }
+
+    /**
+     * calculate log2 n indirectly using log() method
+     *
+     * @param n number
+     * @return log2(n)
+     */
+
+    public static double log2D(long n) {
+        return (Math.log(n) / Math.log(2));
     }
 
     /**

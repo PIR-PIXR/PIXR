@@ -12,5 +12,5 @@ public interface PIXRDistinctVectorStrategy {
      * @param length       binary length
      * @return distinct vectors and setting info
      */
-    PIXRDistinctVectorFinderResult run(List<String> txBinaryList, int length, int step) throws NotMatchException;
+    PIXRDistinctVectorFinderResult run(List<String> txBinaryList, int length) throws NotMatchException;
 }

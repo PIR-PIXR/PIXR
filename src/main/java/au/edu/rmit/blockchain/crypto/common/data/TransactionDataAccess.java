@@ -3,6 +3,7 @@ package au.edu.rmit.blockchain.crypto.common.data;
 import au.edu.rmit.blockchain.crypto.common.api.BlockChainApi;
 import au.edu.rmit.blockchain.crypto.common.dto.Transaction;
 import au.edu.rmit.blockchain.crypto.common.utils.http.APIException;
+import au.edu.rmit.blockchain.crypto.pixr.algorithms.NotImpletementException;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.GsonBuilder;
 
@@ -21,7 +22,7 @@ public class TransactionDataAccess extends AbstractDataAccess<Transaction> {
         this.txList = ImmutableList.copyOf(txList);
     }
 
-    public void downloadTransaction() throws APIException, IOException {
+    public void downloadTransaction() throws APIException, IOException, NotImpletementException {
         for (String hash : txList) {
             currentHashCode = hash;
             download();
@@ -42,4 +43,16 @@ public class TransactionDataAccess extends AbstractDataAccess<Transaction> {
     Transaction parseData(String json) {
         return parser.create().fromJson(json, Transaction.class);
     }
+
+    @Override
+    boolean isMultipleWrite() {
+        return false;
+    }
+
+
+    @Override
+    List<String> getProcessesData() throws NotImpletementException {
+        throw new NotImpletementException("Not implemented!");
+    }
+
 }

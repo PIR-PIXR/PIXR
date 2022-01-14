@@ -5,73 +5,56 @@ import au.edu.rmit.blockchain.crypto.common.utils.Setting;
 import au.edu.rmit.blockchain.crypto.common.utils.Util;
 import au.edu.rmit.blockchain.crypto.common.utils.measurement.Dynamometer;
 import au.edu.rmit.blockchain.crypto.pixr.algorithms.results.PIXRBloomFilterResult;
+import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
-class PIXRBloomFilterTest extends GeneralTest {
+public class BloomFilterTest extends Environment {
+
+    @Test
+    void testLoad() throws IOException {
+        var dataSets = getDataSets(DataSize.ONE_MILLION, 10);
+        Set<String> unique = new HashSet<>();
+        for (ImmutableList<String> i : dataSets) {
+            System.out.println(i.size());
+            unique.addAll(i);
+        }
+        System.out.println(unique.size());
+    }
+
 
     @Test
     void runBloomFilterExperiment() throws IOException, NotMatchException {
-        var testCases = new TestSetting[]{
-                new TestSetting(FIVE_K, 0.01),
-                new TestSetting(FIVE_K, 0.001),
-                new TestSetting(FIVE_K, 0.0001),
-                new TestSetting(FIVE_K, 0.00001),
-                new TestSetting(FIVE_K, 0.000001),
-                new TestSetting(FIVE_K, 0.0000001),
-                new TestSetting(TEN_K, 0.01),
-                new TestSetting(TEN_K, 0.001),
-                new TestSetting(TEN_K, 0.0001),
-                new TestSetting(TEN_K, 0.00001),
-                new TestSetting(TEN_K, 0.000001),
-                new TestSetting(TEN_K, 0.0000001),
-                new TestSetting(HUNDRED_K, 0.01),
-                new TestSetting(HUNDRED_K, 0.001),
-                new TestSetting(HUNDRED_K, 0.0001),
-                new TestSetting(HUNDRED_K, 0.00001),
-                new TestSetting(HUNDRED_K, 0.000001),
-                new TestSetting(HUNDRED_K, 0.0000001),
-                new TestSetting(FIVE_HUNDRED_K, 0.01),
-                new TestSetting(FIVE_HUNDRED_K, 0.001),
-                new TestSetting(FIVE_HUNDRED_K, 0.0001),
-                new TestSetting(FIVE_HUNDRED_K, 0.00001),
-                new TestSetting(FIVE_HUNDRED_K, 0.000001),
-                new TestSetting(FIVE_HUNDRED_K, 0.0000001),
-                new TestSetting(ONE_M, 0.01),
-                new TestSetting(ONE_M, 0.001),
-                new TestSetting(ONE_M, 0.0001),
-                new TestSetting(ONE_M, 0.00001),
-                new TestSetting(ONE_M, 0.000001),
-                new TestSetting(ONE_M, 0.0000001)
-        };
-        TestResult result = new TestResult();
-        for (TestSetting test : testCases) {
-            simulate(result, testSet.get(test.txSize), test.falsePositiveRate);
-        }
-        result.exportResult();
-    }
-
-    private void simulate(TestResult result, List<String> txs, double FPR) {
-        System.out.println("******************************************************************");
-        PIXRBloomFilterResult bestPerformMessage = null;
-        for (int i = 0; i < MAX_TRY; i++) {
-            // Server part
-            PIXRBloomFilterResult message = server(txs, FPR);
-            // Client part
-            int txIdx = new Random().nextInt(txs.size());
-            String vTx = txs.get(txIdx);
-            System.out.println("::::Picking random tx in transaction list to check::::");
-            client(message, vTx, txIdx);
-            System.out.println("******************************************************************");
-            if (null == bestPerformMessage || message.getEncodeTime() < bestPerformMessage.getEncodeTime()) {
-                bestPerformMessage = message;
+        for (DataSize size : new DataSize[]{DataSize.ONE_HUNDRED_THOUSAND, DataSize.FIVE_HUNDRED_THOUSAND, DataSize.ONE_MILLION}) {
+            System.out.println("::::DATA SET " + size + "::::");
+            var dataSets = getDataSets(size, 10);
+            for (int id = 0; id < dataSets.size(); id++) {
+                TestResult result = new TestResult(size, id + 1);
+                for (double i = 1; i >= 0.1; i = i / 10) {
+                    simulate(result, dataSets.get(id), i / dataSets.get(id).size());
+                }
+                result.exportResult();
             }
         }
-        result.addResult(bestPerformMessage);
+    }
+
+    private void simulate(TestResult result, ImmutableList<String> txs, double FPR) {
+
+        System.out.println("******************************************************************");
+        // Server part
+        PIXRBloomFilterResult message = server(txs, FPR);
+        // Client part
+        for (int idx = 0; idx < txs.size(); idx++) {
+            String targetTx = txs.get(idx);
+            System.out.println("::::Picking tx in transaction list to check::::");
+            System.out.println(targetTx);
+            client(message, targetTx, idx);
+            result.addResult(message, targetTx);
+            System.out.println("******************************************************************");
+        }
+
     }
 
     private PIXRBloomFilterResult server(List<String> txs, double FPR) {
@@ -122,28 +105,26 @@ class PIXRBloomFilterTest extends GeneralTest {
         }
     }
 
-    static class TestSetting {
-        public int txSize;
-        public double falsePositiveRate;
-
-        public TestSetting(int txSize, double falsePositiveRate) {
-            this.txSize = txSize;
-            this.falsePositiveRate = falsePositiveRate;
-        }
-    }
-
     static class TestResult {
-        private final CsvFileManager csvFileManager = new CsvFileManager(Setting.RESULT_HOME + Setting.BLOOM_FILTER,
-                "transaction_size", "false_positive_rate", "encode_run_time", "decode_run_time", "filter_size", "found_positions", "is_correct");
+        private final CsvFileManager csvFileManager;
+
+        public TestResult(DataSize dataSize, int id) {
+            csvFileManager = new CsvFileManager(
+                    Setting.RESULT_HOME + Setting.BLOOM_FILTER_PREFIX + "_" + dataSize + "_" + id + Setting.CSV_EXTENSION,
+                    "transaction_size", "target_tx", "false_positive_rate", "encode_run_time", "decode_run_time", "filter_size", "found_positions", "is_correct");
+
+        }
+
         private final List<String[]> results = new ArrayList<>();
 
         public void exportResult() throws IOException, NotMatchException {
             csvFileManager.write(results);
         }
 
-        public void addResult(PIXRBloomFilterResult result) {
+        public void addResult(PIXRBloomFilterResult result, String targetTx) {
             results.add(new String[]{
                     String.valueOf(result.getTxSize()),
+                    targetTx,
                     String.valueOf(result.getFpRate()),
                     String.valueOf(result.getEncodeTime()),
                     String.valueOf(result.getDecodeTime()),
@@ -151,6 +132,16 @@ class PIXRBloomFilterTest extends GeneralTest {
                     String.valueOf(result.getFoundPositions()),
                     String.valueOf(result.isCorrect())
             });
+        }
+    }
+
+    @Test
+    void compareSizeOfHashMapAndList() throws IOException {
+        var dataSets = getDataSets(DataSize.ONE_MILLION, 1);
+        List<String> list = dataSets.get(0);
+        Map<String, Integer> map = new HashMap<>();
+        for (int i = 0; i < list.size(); i++) {
+            map.put(list.get(i), i);
         }
     }
 }

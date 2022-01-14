@@ -1,5 +1,6 @@
 package au.edu.rmit.blockchain.crypto.pixr.algorithms;
 
+import au.edu.rmit.blockchain.crypto.common.utils.Setting;
 import au.edu.rmit.blockchain.crypto.pixr.algorithms.results.PIXRDistinctVectorFinderResult;
 
 import java.util.ArrayList;
@@ -8,19 +9,17 @@ import java.util.List;
 public class PIXRDistinctVectorFinder {
     private final PIXRDistinctVectorStrategy strategy;
     private final List<String> txBinaryStringList;
-    private final int length;
-    private int step = 1;
+    private final int hashLength;
 
-    public PIXRDistinctVectorFinder(PIXRDistinctVectorStrategy strategy, int length) {
+    public PIXRDistinctVectorFinder(PIXRDistinctVectorStrategy strategy, int hashLength) {
         this.strategy = strategy;
-        this.length = length;
+        this.hashLength = hashLength;
         txBinaryStringList = new ArrayList<>();
     }
 
-    public PIXRDistinctVectorFinder(PIXRDistinctVectorStrategy strategy, int length, int step) {
+    public PIXRDistinctVectorFinder(PIXRDistinctVectorStrategy strategy) {
         this.strategy = strategy;
-        this.length = length;
-        this.step = step;
+        this.hashLength = Setting.HASH_CODE_LENGTH;
         txBinaryStringList = new ArrayList<>();
     }
 
@@ -30,7 +29,7 @@ public class PIXRDistinctVectorFinder {
      * @param hash hashcode
      */
     public void put(String hash) throws NotMatchException {
-        if (hash.length() != length)
+        if (hash.length() != hashLength)
             throw new NotMatchException("Length does not match");
         txBinaryStringList.add(hash);
     }
@@ -41,7 +40,7 @@ public class PIXRDistinctVectorFinder {
      * @return distinct vectors and setting info
      */
     public PIXRDistinctVectorFinderResult find() throws NotMatchException {
-        return strategy.run(txBinaryStringList, length, step);
+        return strategy.run(txBinaryStringList, hashLength);
     }
 
 

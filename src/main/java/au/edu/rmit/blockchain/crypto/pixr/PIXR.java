@@ -1,56 +1,41 @@
 package au.edu.rmit.blockchain.crypto.pixr;
 
-import au.edu.rmit.blockchain.crypto.pixr.algorithms.PIXRBloomFilter;
-import au.edu.rmit.blockchain.crypto.pixr.algorithms.PIXRDistinctVectorFinder;
-import au.edu.rmit.blockchain.crypto.pixr.algorithms.SmartScanStrategy;
 import au.edu.rmit.blockchain.crypto.common.data.BlockDataAccess;
-import au.edu.rmit.blockchain.crypto.common.dto.Block;
-import au.edu.rmit.blockchain.crypto.common.dto.Transaction;
-import au.edu.rmit.blockchain.crypto.common.utils.Setting;
-import au.edu.rmit.blockchain.crypto.common.utils.Util;
-import au.edu.rmit.blockchain.crypto.common.utils.measurement.Dynamometer;
-
-import java.util.List;
+import au.edu.rmit.blockchain.crypto.common.data.PIXRDataAccess;
+import au.edu.rmit.blockchain.crypto.pixr.algorithms.PIXRDistinctVectorStrategy;
 
 public class PIXR {
     public static void main(String[] args) throws Exception {
+            hashcodeDownload();
+    }
 
-        BlockDataAccess dataAccess = new BlockDataAccess();
-        var blocks = dataAccess.load();
-        if (blocks.isEmpty()) {
-            dataAccess.downloadBlock();
-            blocks = dataAccess.load();
+    private static void blockDownload() throws InterruptedException {
+        while (true) {
+            try {
+                BlockDataAccess dataAccess = new BlockDataAccess();
+                var blocks = dataAccess.load();
+                if (blocks.isEmpty()) {
+                    dataAccess.downloadBlock();
+                } else {
+                    dataAccess = new BlockDataAccess(blocks.get(blocks.size() - 1).getNextBlockHashes().get(0));
+                    dataAccess.downloadBlock();
+                }
+            } catch (Exception ex) {
+                System.out.println("Error -> Sleep");
+                Thread.sleep(5 * 60 * 1000);
+            }
         }
-        for (Block b : blocks) {
-            System.out.println("Block:" + b.getHash());
-            System.out.println("Number of transaction:" + b.getTransactions().size());
-            System.out.println("Distinct Vector Finder:");
-            Dynamometer.measure(() -> {
-                PIXRDistinctVectorFinder finder = new PIXRDistinctVectorFinder(new SmartScanStrategy(), Setting.HASH_CODE_LENGTH);
-                List<Transaction> txs = b.getTransactions();
-                for (Transaction tx : txs) {
-                    finder.put(Util.parseHex2Binary(tx.getHash()));
-                }
-                var result = finder.find();
-                System.out.println("\tVector length:" + result.getLength());
-                System.out.println("\tStart position:" + result.getPosition());
-                System.out.println("\tSize:" + result.measureResultSize() + " bits");
-                return true;
-            });
+    }
 
-            System.out.println("Bloom Filter:");
-            Dynamometer.measure(() -> {
-                List<Transaction> txs = b.getTransactions();
-                PIXRBloomFilter bloomFilter = new PIXRBloomFilter(txs.size(), 0.01);
-                for (int i = 0; i < txs.size(); i++) {
-                    bloomFilter.put(txs.get(i), i);
-                }
-                var result = bloomFilter.getResult();
-                System.out.println("\tFalse positive rate:" + result.getFpRate());
-                System.out.println("\tSize:" + result.measureResultSize() + " bits");
-                return true;
-            });
-            System.out.println("-----------------------------------------------");
+    private static void hashcodeDownload() throws InterruptedException {
+        PIXRDataAccess dataAccess = new PIXRDataAccess();
+        while (true) {
+            try {
+                dataAccess.download();
+            } catch (Exception ex) {
+                System.out.println("Error -> Sleep");
+                Thread.sleep(5 * 60 * 1000);
+            }
         }
     }
 }
